@@ -1,0 +1,101 @@
+
+
+table users {
+  id integer [primary key]
+  email varchar [not null]
+  role user_type [not null]
+
+  hashed_salted_password varchar
+
+  created_at timestamp [not null]
+  last_active_at timestamp [not null]
+  deleted_at timestamp
+
+  name varchar
+}
+
+enum user_type {
+  admin
+  organizer
+  registered
+  unregistered
+}
+
+table events {
+  id integer [primary key]
+  organizer_user_id integer [not null, ref: >users.id]
+
+  begin_date date
+  end_date date
+
+  begin_time time
+  end_time time
+
+  created_at timestamp [not null]
+  last_active_at timestamp [not null]
+  deleted_at timestamp
+
+  name varchar
+  default_currency varchar
+}
+
+table event_tags {
+  event_id integer [primary key, ref: > events.id]
+  tags_id integer [primary key, ref: > tags.id]
+}
+
+table tags {
+  id integer [primary key]
+  name varchar
+}
+
+table venues {
+  organizer_user_id integer [not null, ref: >users.id]
+  id integer [primary key]
+  name varchar
+  address varchar
+  city varchar
+  postcode varchar
+
+  created_at timestamp [not null]
+  last_active_at timestamp [not null]
+  deleted_at timestamp
+}
+
+table rooms {
+  id integer [primary key]
+  name varchar
+  location_id integer [not null, ref: >venues.id] 
+
+  created_at timestamp [not null]
+  last_active_at timestamp [not null]
+  deleted_at timestamp
+}
+
+table seats {
+  id integer [primary key]
+  name varchar [not null]
+  room_id integer [not null, ref: >rooms.id]
+
+  x float
+  y float
+  rotation float
+
+  created_at timestamp [not null]
+  last_active_at timestamp [not null]
+  deleted_at timestamp
+}
+
+table event_seats {
+  user_id integer [primary key, ref: > users.id]
+  seat_id integer [primary key, ref: > seats.id]
+  event_id integer [primary key, ref: > events.id]
+  guest_name varchar [not null]
+  payment_id int
+  price int [not null]
+
+  created_at timestamp [not null]
+  last_active_at timestamp [not null]
+  deleted_at timestamp
+}
+
