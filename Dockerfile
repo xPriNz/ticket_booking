@@ -17,5 +17,6 @@ from ibm-semeru-runtimes:open-26-jdk as deploy-stage
 workdir /deploy
 
 copy --from=build-stage /build/target/booking-0.0.1-SNAPSHOT.jar ./
+cmd ["java", "-jar", "./booking-0.0.1-SNAPSHOT.jar"]
 expose 8080
 
