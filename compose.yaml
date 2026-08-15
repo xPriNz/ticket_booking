@@ -10,17 +10,20 @@ services:
     container_name: kocmon-booking
     hostname: kocmon-booking
     environment:
-      - "TODO=todo"
+      #- 'SPRING_DATASOURCE_URL=jdbc:postgresql:kocmon-postgresql:5432/kocmon-db'
+      #- 'SPRING_DATASOURCE_USERNAME=localpass'
+      #- 'SPRING_DATASOURCE_PASSWORD=localuser'
+      - 'SPRING_PROFILES_ACTIVE=compose'
     ports:
-      - "8081:8000"
+      - "8081:8080"
     networks:
       - kocmon-net
     healthcheck:
-      test: "curl --fail --silent localhost:8000/actuator/health | grep UP || exit 1"
+      test: "curl --fail --silent localhost:8080/actuator/health | grep UP || exit 1"
       interval: 20s
       timeout: 5s
       retries: 5
-      start_period: 40s
+      start_period: 60s
     deploy:
       restart_policy:
         condition: on-failure
@@ -34,16 +37,16 @@ services:
       timeout: 5s
       retries: 10
 
-
-
     environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+      - 'POSTGRES_DB=kocmon-db'
+      - 'POSTGRES_USER=kocmon-db'
+      - 'POSTGRES_PASSWORD=localpass'
     container_name: postgres
     hostname: kocmon-postgres
     ports:
-      - '5432'
+      - '5432:5432'
+    networks:
+      - kocmon-net
 
   redis:
     image: 'redis:latest'
@@ -51,7 +54,9 @@ services:
     container_name: redis
     hostname: kocmon-redis
     ports:
-      - '6379'
+      - '6379:6379'
+    networks:
+      - kocmon-net
     volumes:
       - kocmon-redis-data:/data
 
