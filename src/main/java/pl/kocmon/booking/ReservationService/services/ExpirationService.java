@@ -1,17 +1,20 @@
 package pl.kocmon.booking.ReservationService.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
+import pl.kocmon.booking.ReservationService.models.Expirable;
+import pl.kocmon.booking.ReservationService.repositories.ExpirableRepository;
 
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 
-@Service
-public class ExpirationService {
-    @Autowired ClockService service;
-
+public class ExpirationService<T extends Expirable, REPO extends ExpirableRepository<T>> {
+    @Autowired ClockService clockService;
+    @Autowired REPO repository;
+/*
     private record TrackedExpirableData(
         Instant expires_at,
         long id
@@ -100,7 +103,7 @@ public class ExpirationService {
             );
         }
     }
-/*
+
     public void insert(Expirable expirable, Consumer<Long> updateCallback) {
         var tracked = new TrackedExpirable(
                 new TrackedExpirableData(expirable.getExpires_at(), expirable.getId()),
@@ -117,7 +120,47 @@ public class ExpirationService {
 
         //}
     }
-*/
+ */
+    public ExpirationService() {
+        /*
+        for(var pendingExpirable: repository.findByExpiresAtNotNull()) {
+            Thread.ofVirtual().start(() -> waitAndExpire(
+                    pendingExpirable.getExpirationTime(),
+                    pendingExpirable.getId(),
+                    pendingExpirable.getExpireIdempotencyKey())
+            );
+        }*/
+    }
+
+    public long save(T expirable, Instant instant) {
+        var idempotencyKey = expirable.setExpirationTime(instant);
+        var newExp = repository.save(expirable);
+
+        var id = newExp.getId();
+
+        Thread.ofVirtual().start(
+            () -> waitAndExpire(instant, id, idempotencyKey)
+        );
+        return id;
+    }
+
+    private void waitAndExpire(Instant expirationTime, long id, long idempotencyKey) {
+        // TODO refactor
+        System.out.println("a");
+
+        clockService.sleepUntil(expirationTime);
+        System.out.println("b");
+        var exp = repository.findById(id).orElseThrow( // TODO do we even care? deleted expirables could be safely discarded
+                () -> new IndexOutOfBoundsException("Expirable id " + id + " not found")
+        );
+        System.out.println("c");
+        if(exp.tryExpire(clockService.now(), idempotencyKey)) {
+            System.out.println("seved");
+            repository.save(exp);
+        }
+        System.out.println("d");
+    }
+
     // TODO tests - a,b
     // 1. insert a,a
     // 2. insert a,b

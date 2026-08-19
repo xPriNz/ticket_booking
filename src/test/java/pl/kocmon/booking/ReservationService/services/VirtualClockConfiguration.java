@@ -2,12 +2,14 @@ package pl.kocmon.booking.ReservationService.services;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 
-@TestConfiguration(proxyBeanMethods = false)
-public class TestClockConfiguration {
+@TestConfiguration
+public class VirtualClockConfiguration {
 
     @Bean
-    ClockService clockService() {
+    @Primary
+    ClockService clockServiceTest() {
         return new VirtualClockService();
     }
 }

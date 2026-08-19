@@ -14,17 +14,32 @@ public class Reservation extends Expirable {
     @JoinColumn(name = "occurrence_id")
     EventOccurrence occurrence;
 
-    //@ManyToOne(fetch = FetchType.LAZY, optional = true)
-    //@Nullable
-    //long user_id,
-
     @Nullable String guest_email;
     @Nullable String guest_name;
-
-    @NonNull
-    ReservationStatus status;
 
     @Nullable Instant confirmed_at;
     @Nullable Instant cancelled_at;
     @Nullable Instant refunded_at;
+
+    public enum Status {
+        PENDING_PAYMENT,
+        CONFIRMED,
+        EXPIRED,
+        PAYMENT_FAILED,
+        CANCELLED,
+        REFUNDED
+    }
+
+    @NonNull Status status;
+
+    @Override
+    protected boolean onExpire() {
+        return switch(status) {
+            case CONFIRMED, CANCELLED, REFUNDED -> false;
+            case PENDING_PAYMENT, PAYMENT_FAILED, EXPIRED -> {
+                status = Status.EXPIRED;
+                yield true;
+            }
+        };
+    }
 }

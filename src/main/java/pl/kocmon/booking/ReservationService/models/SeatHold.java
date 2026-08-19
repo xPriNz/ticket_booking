@@ -19,9 +19,8 @@ public class SeatHold extends Expirable {
     String guest_email;
     String guest_name;
 
-    SeatHold.Status status;
+    Status status;
 
-    @NonNull @Getter Instant expires_at;
     @Nullable Instant converted_at;
     @Nullable Instant cancelled_at;
 
@@ -30,5 +29,16 @@ public class SeatHold extends Expirable {
         CONVERTED,
         EXPIRED,
         CANCELLED
+    }
+
+    @Override
+    protected boolean onExpire() {
+        return switch(status) {
+            case CANCELLED, CONVERTED -> false;
+            case ACTIVE, EXPIRED -> {
+                status = Status.EXPIRED;
+                yield true;
+            }
+        };
     }
 }

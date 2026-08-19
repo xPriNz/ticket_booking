@@ -30,7 +30,7 @@ public class VirtualClockServiceTests {
 
         for(int delay: delays) {
             var thread = Thread.ofVirtual().start(() -> {
-                clock.sleepUntil(now.plus(second.multipliedBy(delay + 1)));
+                clock.sleepUntil(now.plusSeconds(delay + 1));
                 tested.set(delay);
             });
             threads.put(delay, thread);
